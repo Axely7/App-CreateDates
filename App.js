@@ -1,23 +1,35 @@
 
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import {Text, StyleSheet, View, FlatList, TouchableHighlight, TouchableWithoutFeedback, Keyboard, Platform} from 'react-native';
 import Cita from './componentes/Cita';
 import Formulario from './componentes/Formulario';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const App = ()  => {
+  //Definir el state de citas
+  const [citas, setCitas] = useState([]);
   const [mostrarform, guardarMostrarForm] = useState(false);
 
-  //Definir el state de citas
-  const [citas, setCitas] = useState([
-    {id:"1", paciente: "Hook", propietario: "Axel", sintomas: "No come"},
-    {id:"2", paciente: "Redux", propietario: "Itzel", sintomas: "No duerme"},
-    {id:"3", paciente: "Native", propietario: "Josue", sintomas: "No canta"}
-  ]);
+
+  useEffect(()=>{
+    const obtenerCitasStorage = async () =>{
+      try {
+        const citasStorage = await AsyncStorage.getItem('citas');
+        if(citasStorage){
+          setCitas(JSON.parse(citasStorage))
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    }
+    obtenerCitasStorage();
+  }, [])
 
   const eliminarPaciente = id =>{
-    setCitas((citasActuales) =>{
-        return citasActuales.filter( cita => cita.id !== id );
-    })
+
+    const citasFiltradas = citas.filter(cita => cita.id !== id);
+    setCitas(citasFiltradas);
+    guardarCitasStorage(JSON.stringify(citasFiltradas));
   }
 
  // Muestra u oculta el formulario
@@ -31,6 +43,14 @@ const App = ()  => {
    Keyboard.dismiss();
  }
 
+ //Almacenar las citas en storage
+ const guardarCitasStorage = async (citasJSON) => {
+   try {
+     await AsyncStorage.setItem('citas', citasJSON);
+   } catch (error) {
+     console.log(error);
+   }
+ }
 
 
   return (
@@ -52,7 +72,7 @@ const App = ()  => {
               citas={citas}
               setCitas = {setCitas}
               guardarMostrarForm={guardarMostrarForm}
-            
+              guardarCitasStorage = {guardarCitasStorage}
             >
             </Formulario> 
           </>
